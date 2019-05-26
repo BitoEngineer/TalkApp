@@ -7,7 +7,8 @@ using UnityEngine.SceneManagement;
 
 public class TalkScript : MonoBehaviour
 {
-    public TalkClient Client { get; set; }
+
+    public TalkClient Client { get; set; } = null;
     public enum StateEnum { Connecting, Loading, ReadyToRun, Running, ConnectionLost, UnexpectedReply }
     public StateEnum State { get; protected set; } = StateEnum.Connecting;
 
@@ -42,6 +43,11 @@ public class TalkScript : MonoBehaviour
                 }
             }
         });
+    }
+
+    void OnApplicationQuit()
+    {
+        Client.Send(ContentType.Logout, string.Empty);
     }
 
     private void StartConnectionToServer()

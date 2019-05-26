@@ -2,6 +2,7 @@
 using Assets.Core.Models;
 using Assets.Core.Server;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ChatScript : MonoBehaviour
@@ -46,5 +47,19 @@ public class ChatScript : MonoBehaviour
                 go.GetComponentInChildren<Text>().text = txt;
             });
         }
+    }
+
+    public void Back()
+    {
+        _client.Send(ContentType.EndTalk, null, (p) =>
+        {
+            if (p.ContentResult == ContentResult.OK)
+            {
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    SceneManager.LoadScene("TalkScene");
+                });
+            }
+        });
     }
 }

@@ -3,5 +3,6 @@
     Login,
     Logout,
     StartTalk,
-    SendMessage
+    SendMessage,
+    EndTalk
 }

@@ -492,7 +492,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: TALK!
+  m_Text: Talk!
 --- !u!222 &1164762882
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -578,7 +578,6 @@ GameObject:
   - component: {fileID: 1708258347}
   - component: {fileID: 1708258349}
   - component: {fileID: 1708258348}
-  - component: {fileID: 1708258350}
   m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
@@ -643,18 +642,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1708258346}
   m_CullTransparentMesh: 0
---- !u!114 &1708258350
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1708258346}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd0dd7d108f45d14d92b5e2961a49ad5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1749908009
 GameObject:
   m_ObjectHideFlags: 0
