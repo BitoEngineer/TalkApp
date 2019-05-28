@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 
 public class TalkScript : MonoBehaviour
 {
+    public GameObject LoadingObject;
 
     public TalkClient Client { get; set; } = null;
     public enum StateEnum { Connecting, Loading, ReadyToRun, Running, ConnectionLost, UnexpectedReply }
@@ -21,53 +22,42 @@ public class TalkScript : MonoBehaviour
         Client = new TalkClient();
         StartConnectionToServer();
         Client.Login();
+        LoadingObject.SetActive(false);
     }
 
     public void TalkButonListener()
     {
+        LoadingObject?.SetActive(true);
+
         Client.StartTalk((p) =>
         {
             try
             {
-
-                Debug.Log("StartTalk Response 1");
                 if (p.ContentResult == ContentResult.OK)
                 {
-                    Debug.Log("StartTalk Response 2");
                     var foundTalker = p.DeserializeContent<TalkRequest>().Accepted;
 
-                    Debug.Log("StartTalk Response 3");
                     if (foundTalker)
                     {
-                        Debug.Log("StartTalk Response 4");
                         UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
-                            Debug.Log("StartTalk Response 6");
                             SceneManager.LoadScene("ChatScene");
-                            Debug.Log("StartTalk Response 6.1");
                         });
                     }
                     else
                     {
-                        Debug.Log("StartTalk Response 5");
                         Client.AddCallback(ContentType.StartTalk, (packet) =>
                         {
-                            Debug.Log("StartTalk Response 7");
                             UnityMainThreadDispatcher.Instance().Enqueue(() =>
                             {
-                                Debug.Log("StartTalk Response 8");
                                 SceneManager.LoadScene("ChatScene");
-                                Debug.Log("StartTalk Response 8.1");
                             });
                         });
                     }
-
-                    Debug.Log("StartTalk Response 9");
                 }
             }
             catch (Exception e)
             {
-                Debug.Log("StartTalk Error");
                 Debug.Log($"StartTalk Error - {e.ToString()}");
             }
         });

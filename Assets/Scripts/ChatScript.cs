@@ -15,6 +15,8 @@ public class ChatScript : MonoBehaviour
 
     private TalkClient _client;
 
+    private string _text;
+
     void Start()
     {
         _client = FindObjectOfType<TalkScript>().Client;
@@ -23,14 +25,24 @@ public class ChatScript : MonoBehaviour
 
     public void OnTextEnded(string txt)
     {
-        _client.Send(ContentType.SendMessage, new Message() { Text = txt }, (p) =>
+        _text = txt;
+    }
+
+    public void SendText()
+    {
+        if (string.IsNullOrWhiteSpace(_text))
+        {
+            return;
+        }
+
+        _client.Send(ContentType.SendMessage, new Message() { Text = _text }, (p) =>
         {
             if (p.ContentResult == ContentResult.OK)
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
                     var go = Instantiate(MeMessage, MessageContainer.transform);
-                    go.GetComponentInChildren<Text>().text = txt;
+                    go.GetComponentInChildren<Text>().text = _text;
 
                     var inputfield = InputField.GetComponentInChildren<InputField>();
                     inputfield.Select();
@@ -39,7 +51,6 @@ public class ChatScript : MonoBehaviour
                 });
             }
         });
-
     }
 
     public void onMessageReceived(JsonPacket p)
