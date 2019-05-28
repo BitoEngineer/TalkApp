@@ -18,12 +18,12 @@ public class ChatScript : MonoBehaviour
     void Start()
     {
         _client = FindObjectOfType<TalkScript>().Client;
-        _client.AddCallback(ContentType.StartTalk, onMessageReceived);
+        _client.AddCallback(ContentType.SendMessage, onMessageReceived);
     }
 
     public void OnTextEnded(string txt)
     {
-        _client.Send(ContentType.SendMessage, txt, (p) =>
+        _client.Send(ContentType.SendMessage, new Message() { Text = txt }, (p) =>
         {
             if (p.ContentResult == ContentResult.OK)
             {
@@ -31,9 +31,15 @@ public class ChatScript : MonoBehaviour
                 {
                     var go = Instantiate(MeMessage, MessageContainer.transform);
                     go.GetComponentInChildren<Text>().text = txt;
+
+                    var inputfield = InputField.GetComponentInChildren<InputField>();
+                    inputfield.Select();
+                    inputfield.text = null;
+                    //InputField.GetComponentInChildren<InputField>().ActivateInputField();
                 });
             }
         });
+
     }
 
     public void onMessageReceived(JsonPacket p)
@@ -42,9 +48,9 @@ public class ChatScript : MonoBehaviour
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                var txt = p.DeserializeContent<string>();
+                var message = p.DeserializeContent<Message>();
                 var go = Instantiate(YouMessage, MessageContainer.transform);
-                go.GetComponentInChildren<Text>().text = txt;
+                go.GetComponentInChildren<Text>().text = message.Text;
             });
         }
     }

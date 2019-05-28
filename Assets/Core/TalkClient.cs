@@ -192,6 +192,8 @@ namespace Assets.Core
             {
                 onEndSending(this, args);
             }
+
+            if (LogDebugEvent != null) LogDebugEvent.Invoke("Packet sent: {0}", p.ToString());
         }
 
         private void timeElapsed(object op)
@@ -370,7 +372,15 @@ namespace Assets.Core
 
             if (callbacks.TryGetValue((ContentType)Enum.Parse(typeof(ContentType), p.ContentType), out c))
             {
-                c(p);
+                try
+                {
+                    c(p);
+                }
+                catch (Exception e)
+                {
+                    if (LogDebugEvent != null) LogDebugEvent.Invoke("Error on callback: {0}", p.ToString());
+                    if (LogDebugEvent != null) LogDebugEvent.Invoke("Error on callback: {0}", e.ToString());
+                }
             }
         }
 

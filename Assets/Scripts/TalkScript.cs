@@ -1,6 +1,7 @@
 ﻿using System;
 using Assets.Core;
 using Assets.Core.Extensions;
+using Assets.Core.Models;
 using Assets.Core.Server;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,7 +13,7 @@ public class TalkScript : MonoBehaviour
     public enum StateEnum { Connecting, Loading, ReadyToRun, Running, ConnectionLost, UnexpectedReply }
     public StateEnum State { get; protected set; } = StateEnum.Connecting;
 
-    private static string SERVER_IP = "192.168.1.12";//"localhost";// "40.85.119.162";//"runsnailrun.servebeer.com";
+    private static string SERVER_IP = "40.85.119.162";//"192.168.1.73";//"localhost";// "runsnailrun.servebeer.com";
     private static int SERVER_PORT = 2222;
 
     void Start()
@@ -26,23 +27,52 @@ public class TalkScript : MonoBehaviour
     {
         Client.StartTalk((p) =>
         {
-            if (p.ContentResult == ContentResult.OK)
+            try
             {
-                var foundTalker = p.DeserializeContent<bool>();
 
-                if (foundTalker)
+                Debug.Log("StartTalk Response 1");
+                if (p.ContentResult == ContentResult.OK)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => SceneManager.LoadScene("ChatScene"));
-                }
-                else
-                {
-                    Client.AddCallback(ContentType.StartTalk, (packet) =>
+                    Debug.Log("StartTalk Response 2");
+                    var foundTalker = p.DeserializeContent<TalkRequest>().Accepted;
+
+                    Debug.Log("StartTalk Response 3");
+                    if (foundTalker)
                     {
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => SceneManager.LoadScene("ChatScene"));
-                    });
+                        Debug.Log("StartTalk Response 4");
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            Debug.Log("StartTalk Response 6");
+                            SceneManager.LoadScene("ChatScene");
+                            Debug.Log("StartTalk Response 6.1");
+                        });
+                    }
+                    else
+                    {
+                        Debug.Log("StartTalk Response 5");
+                        Client.AddCallback(ContentType.StartTalk, (packet) =>
+                        {
+                            Debug.Log("StartTalk Response 7");
+                            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                            {
+                                Debug.Log("StartTalk Response 8");
+                                SceneManager.LoadScene("ChatScene");
+                                Debug.Log("StartTalk Response 8.1");
+                            });
+                        });
+                    }
+
+                    Debug.Log("StartTalk Response 9");
                 }
             }
+            catch (Exception e)
+            {
+                Debug.Log("StartTalk Error");
+                Debug.Log($"StartTalk Error - {e.ToString()}");
+            }
         });
+
+        Debug.Log("StartTalk Response 10");
     }
 
     void OnApplicationQuit()
