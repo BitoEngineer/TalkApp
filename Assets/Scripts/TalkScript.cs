@@ -10,19 +10,23 @@ public class TalkScript : MonoBehaviour
 {
     public GameObject LoadingObject;
 
-    public TalkClient Client { get; set; } = null;
+    public static TalkClient Client { get; set; } = null;
     public enum StateEnum { Connecting, Loading, ReadyToRun, Running, ConnectionLost, UnexpectedReply }
-    public StateEnum State { get; protected set; } = StateEnum.Connecting;
+    public static StateEnum State { get; protected set; } = StateEnum.Connecting;
 
     private static string SERVER_IP = "40.85.119.162";//"192.168.1.73";//"localhost";// "runsnailrun.servebeer.com";
     private static int SERVER_PORT = 2222;
 
-    void Start()
+    static TalkScript()
     {
         Client = new TalkClient();
         StartConnectionToServer();
         Client.Login();
-        LoadingObject.SetActive(false);
+    }
+
+    void Start()
+    {
+        LoadingObject?.SetActive(false);
     }
 
     public void TalkButonListener()
@@ -70,7 +74,7 @@ public class TalkScript : MonoBehaviour
         Client.Send(ContentType.Logout, string.Empty);
     }
 
-    private void StartConnectionToServer()
+    private static void StartConnectionToServer()
     {
         Client.Stop();
 #if DEBUG
@@ -97,7 +101,7 @@ public class TalkScript : MonoBehaviour
         Debug.LogError("SERVER ERROR: " + string.Format(message, args) + e?.ToString());
     }
 
-    private void OnConectivityChanged(bool isConnected)
+    private static void OnConectivityChanged(bool isConnected)
     {
         if (!isConnected)
         {

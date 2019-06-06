@@ -1,5 +1,4 @@
-﻿using Assets.Core;
-using Assets.Core.Models;
+﻿using Assets.Core.Models;
 using Assets.Core.Server;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,15 +11,14 @@ public class ChatScript : MonoBehaviour
     public GameObject YouMessage;
     public GameObject MessageContainer;
     public GameObject InputField;
-
-    private TalkClient _client;
+    public GameObject ShowMessagesButton;
+    public GameObject HideMessagesButton;
 
     private string _text;
 
     void Start()
     {
-        _client = FindObjectOfType<TalkScript>().Client;
-        _client.AddCallback(ContentType.SendMessage, onMessageReceived);
+        TalkScript.Client.AddCallback(ContentType.SendMessage, onMessageReceived);
     }
 
     public void OnTextEnded(string txt)
@@ -35,7 +33,7 @@ public class ChatScript : MonoBehaviour
             return;
         }
 
-        _client.Send(ContentType.SendMessage, new Message() { Text = _text }, (p) =>
+        TalkScript.Client.Send(ContentType.SendMessage, new Message() { Text = _text }, (p) =>
         {
             if (p.ContentResult == ContentResult.OK)
             {
@@ -68,7 +66,7 @@ public class ChatScript : MonoBehaviour
 
     public void Back()
     {
-        _client.Send(ContentType.EndTalk, null, (p) =>
+        TalkScript.Client.Send(ContentType.EndTalk, null, (p) =>
         {
             if (p.ContentResult == ContentResult.OK)
             {
@@ -78,5 +76,19 @@ public class ChatScript : MonoBehaviour
                 });
             }
         });
+    }
+
+    public void ShowTextListener()
+    {
+        MessageContainer.SetActive(true);
+        ShowMessagesButton.SetActive(false);
+        HideMessagesButton.SetActive(true);
+    }
+
+    public void HideTextListener()
+    {
+        MessageContainer.SetActive(false);
+        HideMessagesButton.SetActive(false);
+        ShowMessagesButton.SetActive(true);
     }
 }
