@@ -4,5 +4,6 @@
     Logout,
     StartTalk,
     SendMessage,
-    EndTalk
+    EndTalk,
+    ConnectedTalkers
 }

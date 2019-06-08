@@ -9,26 +9,35 @@ public class ChatScript : MonoBehaviour
 
     public GameObject MeMessage;
     public GameObject YouMessage;
+    public GameObject InfoMessage;
     public GameObject MessageContainer;
     public GameObject InputField;
     public GameObject ShowMessagesButton;
     public GameObject HideMessagesButton;
 
     private string _text;
+    private bool _talkerLeft = false;
 
     void Start()
     {
         TalkScript.Client.AddCallback(ContentType.SendMessage, onMessageReceived);
+        TalkScript.Client.AddCallback(ContentType.EndTalk, onTalkerLeft);
+    }
+
+    public void OnTextUpdated(string txt)
+    {
+        _text = txt;
     }
 
     public void OnTextEnded(string txt)
     {
         _text = txt;
+        SendText();
     }
 
     public void SendText()
     {
-        if (string.IsNullOrWhiteSpace(_text))
+        if (_talkerLeft || string.IsNullOrWhiteSpace(_text))
         {
             return;
         }
@@ -60,6 +69,20 @@ public class ChatScript : MonoBehaviour
                 var message = p.DeserializeContent<Message>();
                 var go = Instantiate(YouMessage, MessageContainer.transform);
                 go.GetComponentInChildren<Text>().text = message.Text;
+            });
+        }
+    }
+
+    public void onTalkerLeft(JsonPacket p)
+    {
+        if (p.ContentResult == ContentResult.OK)
+        {
+            _talkerLeft = true;
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                var message = p.DeserializeContent<Message>();
+                var go = Instantiate(InfoMessage, MessageContainer.transform);
+                go.GetComponentInChildren<Text>().text = "Talker has left";
             });
         }
     }

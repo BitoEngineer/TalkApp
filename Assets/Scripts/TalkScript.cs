@@ -5,10 +5,15 @@ using Assets.Core.Models;
 using Assets.Core.Server;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class TalkScript : MonoBehaviour
 {
     public GameObject LoadingObject;
+    public GameObject ConnectedTalker;
+
+    private static bool isToUpdate = false;
+    private static int numTalkers = 0;
 
     public static TalkClient Client { get; set; } = null;
     public enum StateEnum { Connecting, Loading, ReadyToRun, Running, ConnectionLost, UnexpectedReply }
@@ -21,12 +26,23 @@ public class TalkScript : MonoBehaviour
     {
         Client = new TalkClient();
         StartConnectionToServer();
+        Client.AddCallback(ContentType.ConnectedTalkers, onConnectedTalker);
         Client.Login();
     }
 
     void Start()
     {
         LoadingObject?.SetActive(false);
+        ConnectedTalker.GetComponent<Text>().text = $"{numTalkers} talkers";
+    }
+
+    void Update()
+    {
+        if (isToUpdate)
+        {
+            ConnectedTalker.GetComponent<Text>().text = $"{numTalkers} talkers";
+            isToUpdate = false;
+        }
     }
 
     public void TalkButonListener()
@@ -72,6 +88,16 @@ public class TalkScript : MonoBehaviour
     void OnApplicationQuit()
     {
         Client.Send(ContentType.Logout, string.Empty);
+    }
+
+    private static void onConnectedTalker(JsonPacket p)
+    {
+        if (p.ContentResult == ContentResult.OK)
+        {
+            var talkers = p.DeserializeContent<ConnectedTalkers>();
+            numTalkers = talkers.Connected - 1;
+            isToUpdate = true;
+        }
     }
 
     private static void StartConnectionToServer()
