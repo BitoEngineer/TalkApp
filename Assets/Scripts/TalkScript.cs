@@ -33,16 +33,26 @@ public class TalkScript : MonoBehaviour
     void Start()
     {
         LoadingObject?.SetActive(false);
-        ConnectedTalker.GetComponent<Text>().text = $"{numTalkers} talkers";
+        updateNrTalkers();
     }
 
     void Update()
     {
         if (isToUpdate)
         {
-            ConnectedTalker.GetComponent<Text>().text = $"{numTalkers} talkers";
             isToUpdate = false;
+            updateNrTalkers();
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+    }
+
+    private void updateNrTalkers()
+    {
+        ConnectedTalker.GetComponent<Text>().text = $"{numTalkers} talkers online";
     }
 
     public void TalkButonListener()

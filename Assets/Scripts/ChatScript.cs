@@ -1,8 +1,8 @@
 ﻿using Assets.Core.Models;
 using Assets.Core.Server;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class ChatScript : MonoBehaviour
 {
@@ -15,46 +15,49 @@ public class ChatScript : MonoBehaviour
     public GameObject ShowMessagesButton;
     public GameObject HideMessagesButton;
 
-    private string _text;
     private bool _talkerLeft = false;
+
+    private TMP_InputField tmp_inputField;
 
     void Start()
     {
         TalkScript.Client.AddCallback(ContentType.SendMessage, onMessageReceived);
         TalkScript.Client.AddCallback(ContentType.EndTalk, onTalkerLeft);
+
+        tmp_inputField = InputField.GetComponentInChildren<TMP_InputField>();
     }
 
-    public void OnTextUpdated(string txt)
+    void Update()
     {
-        _text = txt;
-    }
-
-    public void OnTextEnded(string txt)
-    {
-        _text = txt;
-        SendText();
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Back();
+        }
+        else if (_talkerLeft && tmp_inputField.IsInteractable())
+        {
+            tmp_inputField.interactable = false;
+        }
     }
 
     public void SendText()
     {
-        if (_talkerLeft || string.IsNullOrWhiteSpace(_text))
+        var text = tmp_inputField.text;
+
+        if (_talkerLeft || string.IsNullOrWhiteSpace(text))
         {
             return;
         }
 
-        TalkScript.Client.Send(ContentType.SendMessage, new Message() { Text = _text }, (p) =>
+        TalkScript.Client.Send(ContentType.SendMessage, new Message() { Text = text }, (p) =>
         {
             if (p.ContentResult == ContentResult.OK)
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
                     var go = Instantiate(MeMessage, MessageContainer.transform);
-                    go.GetComponentInChildren<Text>().text = _text;
+                    go.GetComponentInChildren<TMP_Text>().text = text;
 
-                    var inputfield = InputField.GetComponentInChildren<InputField>();
-                    inputfield.Select();
-                    inputfield.text = null;
-                    //InputField.GetComponentInChildren<InputField>().ActivateInputField();
+                    tmp_inputField.text = string.Empty;
                 });
             }
         });
@@ -68,7 +71,7 @@ public class ChatScript : MonoBehaviour
             {
                 var message = p.DeserializeContent<Message>();
                 var go = Instantiate(YouMessage, MessageContainer.transform);
-                go.GetComponentInChildren<Text>().text = message.Text;
+                go.GetComponentInChildren<TMP_Text>().text = message.Text;
             });
         }
     }
@@ -82,7 +85,7 @@ public class ChatScript : MonoBehaviour
             {
                 var message = p.DeserializeContent<Message>();
                 var go = Instantiate(InfoMessage, MessageContainer.transform);
-                go.GetComponentInChildren<Text>().text = "Talker has left";
+                go.GetComponentInChildren<TMP_Text>().text = "Talker has left";
             });
         }
     }
