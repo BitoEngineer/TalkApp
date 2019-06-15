@@ -3,6 +3,7 @@ using Assets.Core.Server;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class ChatScript : MonoBehaviour
 {
@@ -33,10 +34,17 @@ public class ChatScript : MonoBehaviour
         {
             Back();
         }
+        else if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        {
+            SendText();
+        }
         else if (_talkerLeft && tmp_inputField.IsInteractable())
         {
             tmp_inputField.interactable = false;
         }
+
+        InputField.GetComponent<LayoutElement>().preferredHeight =
+            TouchScreenKeyboard.visible ? TouchScreenKeyboard.area.height : -1;
     }
 
     public void SendText()
