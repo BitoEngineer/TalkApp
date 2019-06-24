@@ -37,9 +37,24 @@ namespace Assets.Core.Models
 
         public T DeserializeContent<T>()
         {
-            //return JsonMapper.ToObject<T>(ContentJson);
-            //return JsonUtility.FromJson<T>(ContentJson);
             return JsonConvert.DeserializeObject<T>(ContentJson);
+        }
+
+        public bool TryDeserializeContent<T>(out T t, T @default = default(T))
+        {
+            t = @default;
+
+            try
+            {
+                t = JsonConvert.DeserializeObject<T>(ContentJson);
+                return true;
+            }
+            catch(Exception e)
+            {
+                Debug.LogWarningFormat("TryDeserializeContent fail: {0}\r\n\n{1}", ContentJson ?? "null", e);
+            }
+
+            return false;
         }
 
         public byte[] GetPacket()

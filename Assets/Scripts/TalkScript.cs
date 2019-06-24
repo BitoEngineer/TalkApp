@@ -16,8 +16,6 @@ public class TalkScript : MonoBehaviour
     private static int numTalkers = 0;
 
     public static TalkClient Client { get; set; } = null;
-    public enum StateEnum { Connecting, Loading, ReadyToRun, Running, ConnectionLost, UnexpectedReply }
-    public static StateEnum State { get; protected set; } = StateEnum.Connecting;
 
     private static string SERVER_IP = "40.85.119.162";//"192.168.1.73";//"localhost";// "runsnailrun.servebeer.com";
     private static int SERVER_PORT = 2222;
@@ -63,7 +61,12 @@ public class TalkScript : MonoBehaviour
         {
             try
             {
-                if (p.ContentResult == ContentResult.OK)
+                if (p.ContentResult != ContentResult.OK)
+                {
+                    Debug.Log($"StartTalk Unexpected ContentResult - {p.ContentResult}");
+                    OnError();
+                }
+                else
                 {
                     var foundTalker = p.DeserializeContent<TalkRequest>().Accepted;
 
@@ -78,6 +81,7 @@ public class TalkScript : MonoBehaviour
                     {
                         Client.AddCallback(ContentType.StartTalk, (packet) =>
                         {
+                            Client.RemoveCallback(ContentType.StartTalk);
                             UnityMainThreadDispatcher.Instance().Enqueue(() =>
                             {
                                 SceneManager.LoadScene("ChatScene");
@@ -89,10 +93,9 @@ public class TalkScript : MonoBehaviour
             catch (Exception e)
             {
                 Debug.Log($"StartTalk Error - {e.ToString()}");
+                OnError();
             }
         });
-
-        Debug.Log("StartTalk Response 10");
     }
 
     void OnApplicationQuit()
@@ -139,13 +142,11 @@ public class TalkScript : MonoBehaviour
 
     private static void OnConectivityChanged(bool isConnected)
     {
-        if (!isConnected)
-        {
-            State = StateEnum.ConnectionLost;
-        }
-        else if (State == StateEnum.Connecting)
-        {
-            //TODO
-        }
+        // TODO
+    }
+
+    private static void OnError()
+    {
+        // TODO
     }
 }

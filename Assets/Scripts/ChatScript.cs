@@ -1,5 +1,7 @@
-﻿using Assets.Core.Models;
+﻿using Assets.Core.Extensions;
+using Assets.Core.Models;
 using Assets.Core.Server;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -16,7 +18,7 @@ public class ChatScript : MonoBehaviour
     public GameObject ShowMessagesButton;
     public GameObject HideMessagesButton;
 
-    private bool _talkerLeft = false;
+    private bool _conversationEnded = false;
 
     private TMP_InputField tmp_inputField;
 
@@ -34,13 +36,18 @@ public class ChatScript : MonoBehaviour
         {
             Back();
         }
-        else if (Input.GetKeyDown(KeyCode.KeypadEnter))
+        else if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
         {
             SendText();
         }
-        else if (_talkerLeft && tmp_inputField.IsInteractable())
+
+        if (_conversationEnded && tmp_inputField.IsInteractable())
         {
             tmp_inputField.interactable = false;
+        }
+        else if(!_conversationEnded && !tmp_inputField.IsInteractable())
+        {
+            tmp_inputField.interactable = true;
         }
 
         InputField.GetComponent<LayoutElement>().preferredHeight =
@@ -51,7 +58,7 @@ public class ChatScript : MonoBehaviour
     {
         var text = tmp_inputField.text;
 
-        if (_talkerLeft || string.IsNullOrWhiteSpace(text))
+        if (_conversationEnded || string.IsNullOrWhiteSpace(text))
         {
             return;
         }
@@ -73,6 +80,11 @@ public class ChatScript : MonoBehaviour
 
     public void onMessageReceived(JsonPacket p)
     {
+        if (_conversationEnded)
+        {
+            return;
+        }
+
         if (p.ContentResult == ContentResult.OK)
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -88,7 +100,7 @@ public class ChatScript : MonoBehaviour
     {
         if (p.ContentResult == ContentResult.OK)
         {
-            _talkerLeft = true;
+            _conversationEnded = true;
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 var message = p.DeserializeContent<Message>();
@@ -112,6 +124,85 @@ public class ChatScript : MonoBehaviour
         });
     }
 
+    public void OnNextTalker()
+    {
+        _conversationEnded = true;
+
+        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+        {
+            var go = Instantiate(InfoMessage, MessageContainer.transform);
+            go.GetComponentInChildren<TMP_Text>().text = "Searching for a new talker...";
+        });
+
+        TalkScript.Client.Send(ContentType.EndTalk, null, _ =>
+        {
+            SendStartTalk();
+        });
+    }
+
+    private void SendStartTalk()
+    {
+        TalkScript.Client.StartTalk((p) =>
+        {
+            try
+            {
+                if (p.ContentResult != ContentResult.OK)
+                {
+                    Debug.Log($"StartTalk Unexpected ContentResult - {p.ContentResult}");
+                    OnError();
+                }
+                else
+                {
+                    TalkRequest requestReply;
+
+                    p.TryDeserializeContent<TalkRequest>(out requestReply);
+
+                    if (requestReply is object && requestReply.Accepted)
+                    {
+                        OnTalkerFound();
+                    }
+                    else
+                    {
+                        OnTalkerNotFound();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"StartTalk Error - {e.ToString()}");
+                OnError();
+            }
+        });
+    }
+
+    private void OnTalkerNotFound()
+    {
+        TalkScript.Client.AddCallback(ContentType.StartTalk, (packet) =>
+        {
+            TalkScript.Client.RemoveCallback(ContentType.StartTalk);
+            OnTalkerFound();
+        });
+    }
+
+    private void OnTalkerFound()
+    {
+        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+        {
+            ClearMessages();
+            var go = Instantiate(InfoMessage, MessageContainer.transform);
+            go.GetComponentInChildren<TMP_Text>().text = "New talker found!";
+            _conversationEnded = false;
+        });
+    }
+
+    private void ClearMessages()
+    {
+        foreach(Transform transform in MessageContainer.transform)
+        {
+            Destroy(transform.gameObject);
+        }
+    }
+
     public void ShowTextListener()
     {
         MessageContainer.SetActive(true);
@@ -124,5 +215,13 @@ public class ChatScript : MonoBehaviour
         MessageContainer.SetActive(false);
         HideMessagesButton.SetActive(false);
         ShowMessagesButton.SetActive(true);
+    }
+
+    private void OnError()
+    {
+        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+        {
+            SceneManager.LoadScene("TalkScene");
+        });
     }
 }
